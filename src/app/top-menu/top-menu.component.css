@@ -9,3 +9,7 @@ mat-toolbar-row .title {
 mat-toolbar-row button {
     margin-left: 2px
 }
+
+.active {
+    color: #ABAAB5
+}

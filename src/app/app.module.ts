@@ -6,11 +6,21 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MaterialModule } from './material.module';
 import { TopMenuComponent } from './top-menu/top-menu.component';
+import { IndexComponent } from './index/index.component';
+import { LabirintoComponent } from './labirinto/labirinto.component';
+import { AjudaComponent } from './ajuda/ajuda.component';
+import { MenuComponent } from './labirinto/menu/menu.component';
+import { MatrizComponent } from './labirinto/matriz/matriz.component';
 
 @NgModule({
   declarations: [
     AppComponent,
-    TopMenuComponent
+    TopMenuComponent,
+    IndexComponent,
+    LabirintoComponent,
+    AjudaComponent,
+    MenuComponent,
+    MatrizComponent
   ],
   imports: [
     BrowserModule,
