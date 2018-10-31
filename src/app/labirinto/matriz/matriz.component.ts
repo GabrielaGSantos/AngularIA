@@ -12,11 +12,14 @@ export class MatrizComponent implements OnInit {
   htmlElement: HTMLElement;
   host: d3.Selection<any, any, any, any>;
 
-  side = 500;
+  width = 800;
+  height = 500;
   border_width = 0.5;
 
-  lines: number = 50;
-  columns: number = 50
+  lines: number = 25;
+  columns: number = 40
+
+
 
   maze: Maze
 
@@ -24,7 +27,7 @@ export class MatrizComponent implements OnInit {
     this.htmlElement = this.element.nativeElement;
     this.host = d3.select(this.element.nativeElement)
 
-    this.maze = new Maze(this.lines, this.columns, this.side)
+    this.maze = new Maze(this.lines, this.columns, this.width, this.height)
 
   }
 
@@ -32,6 +35,34 @@ export class MatrizComponent implements OnInit {
     this.drawMaze()
   }
 
+  limpar() {
+    this.maze.defineStartSquare(null)
+    this.maze.defineEndSquare(null)
+
+    d3.select("svg").selectAll("*").remove()
+    
+    this.maze.square_array.forEach((line, i) => {
+      this.host.select('svg')
+        .append('g')
+        .attr('class', 'row')
+        .attr('id', `row${i}`)
+
+      line.forEach((square, j) => {
+        if (i == 0 || i == this.lines - 1 || j == 0 || j == this.columns - 1)
+          square.type =  SquareType.wall
+        else
+        square.type =  SquareType.path
+      })
+    })
+        
+
+    this.drawMaze()
+  }
+
+  handleEvent(event) {
+    if (event == 'limpar')
+      this.limpar()
+  }
 
   drawMaze() {
     let self = this
@@ -43,9 +74,8 @@ export class MatrizComponent implements OnInit {
     this.host.select('svg')
       .style('margin', '10px')
       .style('box-shadow', '0px 0px 3px 2px rgba(0, 0, 0, .1)')
-      .attr('width', this.side)
-      .attr('height', this.side)
-      .attr("transform", "translate(" + 375 + "," + 0 + ")scale(" + 1 + ")")
+      .attr('width', this.width)
+      .attr('height', this.height)
       .call(drag.drag()
         .on('start', () => {
           cur_sqr = d3.event.sourceEvent.srcElement.id;
@@ -53,14 +83,7 @@ export class MatrizComponent implements OnInit {
 
           self.maze.click(square)
 
-          if (square.type == SquareType.path)
-            d3.select(`#${cur_sqr}`).style('fill', 'white')
-          if (square.type == SquareType.wall)
-            d3.select(`#${cur_sqr}`).style('fill', '#9E9E9E')
-          if (square.type == SquareType.start)
-            d3.select(`#${cur_sqr}`).style('fill', '#8BC34A')
-          if (square.type == SquareType.end)
-            d3.select(`#${cur_sqr}`).style('fill', '#E53935')
+          d3.select(`#${cur_sqr}`).style('fill', square.type)
 
           type = square.type
         })
@@ -76,11 +99,7 @@ export class MatrizComponent implements OnInit {
 
             square.type = type
 
-            if (square.type == SquareType.wall)
-              d3.select(`#${cur_sqr}`).style('fill', '#9E9E9E')
-
-            if (square.type == SquareType.path)
-              d3.select(`#${cur_sqr}`).style('fill', 'white')
+            d3.select(`#${cur_sqr}`).style('fill', square.type)
           }
         })
         .on('end', () => {
@@ -101,12 +120,14 @@ export class MatrizComponent implements OnInit {
           .datum(square)
           .append('rect')
           .attr("class", "square")
-          .attr("id", `square${pad(square.x,4)}${pad(square.y,4)}`)
+          .attr("id", `square${pad(square.x, 4)}${pad(square.y, 4)}`)
           .attr("x", square.x * square.height)
           .attr("y", square.y * square.width)
           .attr("width", square.height)
           .attr("height", square.width)
-          .style("fill", "#fff")
+          .style("fill", () => {
+            return square.type
+          })
           .style("stroke", "#BDBDBD")
           .on('mouseenter', function (d) {
             d3.select(this).style('stroke-offset', '5px')
@@ -123,14 +144,14 @@ export class MatrizComponent implements OnInit {
 
 function pad(num, size) {
   var s = "000000000" + num;
-  return s.substr(s.length-size);
+  return s.substr(s.length - size);
 }
 
 enum SquareType {
-  path = 0,
-  wall = 1,
-  start = 2,
-  end = 3
+  path = "#FFF",
+  wall = "#BDBDBD",
+  start = "#09af00",
+  end = "#E53935"
 }
 
 class Square {
@@ -155,14 +176,20 @@ class Maze {
   private start_square: Square
   private end_square: Square
 
-  constructor(lines: number, columns: number, side: number) {
+  constructor(lines: number, columns: number, width: number, height: number) {
     this.square_array = new Array()
 
     for (var i = 0; i < lines; i++) {
       var new_line = new Array()
 
       for (var j = 0; j < columns; j++) {
-        var new_square = new Square(j, i, side / columns, side / lines, SquareType.path)
+        var new_square
+
+        if (i == 0 || i == lines - 1 || j == 0 || j == columns - 1)
+          new_square = new Square(j, i, width / columns, height / lines, SquareType.wall)
+        else
+          new_square = new Square(j, i, width / columns, height / lines, SquareType.path)
+
         new_line.push(new_square)
       }
 

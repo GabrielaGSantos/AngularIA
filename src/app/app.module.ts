@@ -11,6 +11,7 @@ import { LabirintoComponent } from './labirinto/labirinto.component';
 import { AjudaComponent } from './ajuda/ajuda.component';
 import { MenuComponent } from './labirinto/menu/menu.component';
 import { MatrizComponent } from './labirinto/matriz/matriz.component';
+import { OpcoesComponent } from './labirinto/matriz/opcoes/opcoes.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { MatrizComponent } from './labirinto/matriz/matriz.component';
     LabirintoComponent,
     AjudaComponent,
     MenuComponent,
-    MatrizComponent
+    MatrizComponent,
+    OpcoesComponent
   ],
   imports: [
     BrowserModule,
