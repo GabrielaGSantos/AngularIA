@@ -1,4 +1,6 @@
-import { Component, OnInit, ElementRef } from '@angular/core';
+import { Component, OnInit, ElementRef} from '@angular/core';
+import { MatSnackBar } from '@angular/material';
+
 import * as d3 from 'd3-selection'
 import * as drag from 'd3-drag'
 
@@ -19,11 +21,9 @@ export class MatrizComponent implements OnInit {
   lines: number = 25;
   columns: number = 40
 
-
-
   maze: Maze
 
-  constructor(private element: ElementRef) {
+  constructor(private element: ElementRef, public snackBar: MatSnackBar) {
     this.htmlElement = this.element.nativeElement;
     this.host = d3.select(this.element.nativeElement)
 
@@ -40,7 +40,23 @@ export class MatrizComponent implements OnInit {
     this.maze.defineEndSquare(null)
 
     d3.select("svg").selectAll("*").remove()
-    
+
+    this.desenharBordas()
+    this.drawMaze()
+  }
+
+  handleEvent(event) {
+    if (event.evento == 'limpar')
+      this.limpar()
+    if (event.evento == 'iniciar')
+      this.iniciar(event.algoritmo)
+    if (event.evento == 'pausar')
+      this.pausar()
+    if (event.evento == 'cancelar')
+      this.cancelar()
+  }
+
+  desenharBordas() {
     this.maze.square_array.forEach((line, i) => {
       this.host.select('svg')
         .append('g')
@@ -49,19 +65,11 @@ export class MatrizComponent implements OnInit {
 
       line.forEach((square, j) => {
         if (i == 0 || i == this.lines - 1 || j == 0 || j == this.columns - 1)
-          square.type =  SquareType.wall
+          square.type = SquareType.wall
         else
-        square.type =  SquareType.path
+          square.type = SquareType.path
       })
     })
-        
-
-    this.drawMaze()
-  }
-
-  handleEvent(event) {
-    if (event == 'limpar')
-      this.limpar()
   }
 
   drawMaze() {
@@ -84,9 +92,9 @@ export class MatrizComponent implements OnInit {
           self.maze.click(square)
 
           d3.select(`#${cur_sqr}`).style('fill', square.type)
-
           type = square.type
         })
+
         .on('drag', () => {
           if (d3.event.sourceEvent.srcElement.id != cur_sqr && (type == SquareType.path || type == SquareType.wall)) {
             cur_sqr = d3.event.sourceEvent.srcElement.id;
@@ -104,9 +112,10 @@ export class MatrizComponent implements OnInit {
         })
         .on('end', () => {
           cur_sqr = null
+          square = null
+          type = null
         })
       )
-
 
     this.maze.square_array.forEach((line, i) => {
       this.host.select('svg')
@@ -140,6 +149,38 @@ export class MatrizComponent implements OnInit {
     })
   }
 
+  iniciar(algoritmo: string) {
+    let explorador: Explorador;
+
+    console.log(algoritmo)
+
+    if (this.maze.getStartSquare()) {
+      if (!this.maze.getEndSquare())
+        this.showError('Fim do Labirinto Não Definido')
+      else {
+        explorador = new Explorador(this.maze.getStartSquare(), this.maze.getEndSquare())
+        this.executarAlgoritmo(explorador)
+      }
+    }
+
+    else {
+      this.showError('Início do Labirinto Não Definido')
+    }
+  }
+
+  pausar(){}
+
+  cancelar(){}
+
+  showError(message: string) {
+    this.snackBar.open(message, 'Fechar', {
+      duration: 2000
+    });
+  }
+
+  executarAlgoritmo(explorador: Explorador) {
+
+  }
 }
 
 function pad(num, size) {
@@ -151,7 +192,8 @@ enum SquareType {
   path = "#FFF",
   wall = "#BDBDBD",
   start = "#09af00",
-  end = "#E53935"
+  end = "#E53935",
+  explorador = "#B3E5FC"
 }
 
 class Square {
@@ -187,6 +229,7 @@ class Maze {
 
         if (i == 0 || i == lines - 1 || j == 0 || j == columns - 1)
           new_square = new Square(j, i, width / columns, height / lines, SquareType.wall)
+
         else
           new_square = new Square(j, i, width / columns, height / lines, SquareType.path)
 
@@ -194,7 +237,6 @@ class Maze {
       }
 
       this.square_array.push(new_line)
-
     }
   }
 
@@ -236,12 +278,10 @@ class Maze {
   }
 
   defineStartSquare(start: Square) {
-
     this.start_square = start
   }
 
   defineEndSquare(end: Square) {
-
     this.end_square = end
   }
 
@@ -253,3 +293,18 @@ class Maze {
     return this.end_square
   }
 }
+
+class Explorador {
+  position_inicial: Square
+  position_final: Square
+  last_type: SquareType
+
+  constructor(initial_square: Square, final_square: Square) {
+    this.position_inicial = initial_square
+    this.last_type = initial_square.type
+    this.position_final = final_square
+
+    initial_square.type = SquareType.explorador
+  }
+}
+

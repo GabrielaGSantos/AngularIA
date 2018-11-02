@@ -2,17 +2,34 @@
   <mat-expansion-panel hideToggle>
     <mat-expansion-panel-header>
       <mat-panel-title>
-        Algoritmo de Busca
+        Opções
       </mat-panel-title>
 
     </mat-expansion-panel-header>
 
-    <mat-form-field>
-      <input matInput placeholder="First name">
-    </mat-form-field>
+    <button mat-raised-button color="accent" (click)="limpar()">
+      <mat-icon>delete</mat-icon>
+    </button>
+
+  </mat-expansion-panel>
+
+  <mat-expansion-panel hideToggle>
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        Algoritmo de Busca
+      </mat-panel-title>
+      <mat-panel-description>
+        {{selectedAlgorithm.toUpperCase()}}
+      </mat-panel-description>
+
+    </mat-expansion-panel-header>
 
     <mat-form-field>
-      <input matInput type="number" min="1" placeholder="Age">
+      <mat-select placeholder="Selecione o Algoritmo" [(value)]="selectedAlgorithm" (selectionChange)="toggleExecucao()" (click)="cancelar()">
+        <mat-option *ngFor="let alg of algs" [value]="alg.nome">
+          {{alg.viewNome}}
+        </mat-option>
+      </mat-select>
     </mat-form-field>
   </mat-expansion-panel>
 
@@ -25,20 +42,16 @@
     </mat-expansion-panel-header>
 
     <div class="example-button-row">
-      <a mat-raised-button color="primary" style="margin-right: 10px">
+      <a mat-raised-button color="primary" style="margin-right: 10px" [disabled]="disableExecucao" (click)="iniciar()">
         <mat-icon>play_arrow</mat-icon>
       </a>
-      <a mat-raised-button color="primary" style="margin-right: 10px">
+      <a mat-raised-button color="primary" style="margin-right: 10px" [disabled]="disableExecucao" (click)="pausar()">
         <mat-icon>pause</mat-icon>
       </a>
-      <a mat-raised-button color="primary">
+      <a mat-raised-button color="primary" [disabled]="disableExecucao" (click)="cancelar()">
         <mat-icon>stop</mat-icon>
       </a>
     </div>
-    <br><br>
-    <button mat-raised-button color="accent" (click)="limpar()">
-      <mat-icon>delete</mat-icon>
-    </button>
 
   </mat-expansion-panel>
 
