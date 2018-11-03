@@ -1,5 +1,6 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AlgoritmosComponent } from '../algoritmos/algoritmos.component';
+import { Service } from '../servico.service'
 
 @Component({
   selector: 'app-opcoes',
@@ -8,7 +9,6 @@ import { AlgoritmosComponent } from '../algoritmos/algoritmos.component';
 })
 
 export class OpcoesComponent implements OnInit {
-  @Output() event = new EventEmitter()
 
   algs: Algoritmo[] = [
     { nome: 'bfs', viewNome: 'Busca em Largura' },
@@ -20,27 +20,27 @@ export class OpcoesComponent implements OnInit {
   disableExecucao: boolean = true;
   disablePlay: boolean = false;
 
-  constructor() { }
+  constructor(public service: Service) { }
 
   ngOnInit() {
   }
 
   limpar() {
-    this.event.emit({evento: 'limpar'})
+    this.service.eventoEmitido('limpar')
   }
 
   iniciar() {
     this.disablePlay = true
-    this.event.emit({evento: 'iniciar', algoritmo: this.selectedAlgorithm})
+    this.service.eventoEmitido('iniciar')
+    this.service.setAlgoritmo(this.selectedAlgorithm)
   }
 
   pausar() {
-    this.event.emit({evento: 'pausar'})
+    this.service.eventoEmitido('pausar')
   }
 
   cancelar() {
-    console.log("cancelar")
-    this.event.emit({evento: 'cancelar'})
+    this.service.eventoEmitido('cancelar')
   }
 
   toggleExecucao() {

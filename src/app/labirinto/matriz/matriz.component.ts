@@ -1,5 +1,6 @@
-import { Component, OnInit, ElementRef} from '@angular/core';
+import { Component, OnInit, ElementRef } from '@angular/core';
 import { MatSnackBar } from '@angular/material';
+import { Service } from './servico.service'
 
 import * as d3 from 'd3-selection'
 import * as drag from 'd3-drag'
@@ -21,9 +22,11 @@ export class MatrizComponent implements OnInit {
   lines: number = 25;
   columns: number = 40
 
+  teste: string
+
   maze: Maze
 
-  constructor(private element: ElementRef, public snackBar: MatSnackBar) {
+  constructor(private element: ElementRef, public snackBar: MatSnackBar, public service: Service) {
     this.htmlElement = this.element.nativeElement;
     this.host = d3.select(this.element.nativeElement)
 
@@ -33,6 +36,9 @@ export class MatrizComponent implements OnInit {
 
   ngOnInit() {
     this.drawMaze()
+    this.service.emitirEvento.subscribe(
+      teste => console.log(teste)
+    );
   }
 
   limpar() {
@@ -168,9 +174,9 @@ export class MatrizComponent implements OnInit {
     }
   }
 
-  pausar(){}
+  pausar() { }
 
-  cancelar(){}
+  cancelar() { }
 
   showError(message: string) {
     this.snackBar.open(message, 'Fechar', {

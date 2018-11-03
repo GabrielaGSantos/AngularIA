@@ -13,6 +13,7 @@ import { MenuComponent } from './labirinto/menu/menu.component';
 import { MatrizComponent } from './labirinto/matriz/matriz.component';
 import { OpcoesComponent } from './labirinto/matriz/opcoes/opcoes.component';
 import { AlgoritmosComponent } from './labirinto/matriz/algoritmos/algoritmos.component';
+import { Service } from './labirinto/matriz/servico.service';
 
 @NgModule({
   declarations: [
@@ -32,7 +33,9 @@ import { AlgoritmosComponent } from './labirinto/matriz/algoritmos/algoritmos.co
     BrowserAnimationsModule,
     MaterialModule
   ],
-  providers: [],
+  providers: [
+    Service
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
