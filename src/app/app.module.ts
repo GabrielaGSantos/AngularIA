@@ -14,6 +14,7 @@ import { MatrizComponent } from './labirinto/matriz/matriz.component';
 import { OpcoesComponent } from './labirinto/matriz/opcoes/opcoes.component';
 import { AlgoritmosComponent } from './labirinto/matriz/algoritmos/algoritmos.component';
 import { Service } from './labirinto/matriz/servico.service';
+import { AlgoritmosService } from './labirinto/matriz/algoritmos/algoritmos.service';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { Service } from './labirinto/matriz/servico.service';
     MaterialModule
   ],
   providers: [
-    Service
+    Service,
+    AlgoritmosService
   ],
   bootstrap: [AppComponent]
 })

@@ -4,6 +4,7 @@ import { Service } from './servico.service'
 
 import * as d3 from 'd3-selection'
 import * as drag from 'd3-drag'
+import { AlgoritmosService } from './algoritmos/algoritmos.service';
 
 @Component({
   selector: 'app-matriz',
@@ -26,9 +27,9 @@ export class MatrizComponent implements OnInit {
 
   maze: Maze
 
-  algoritmoSelecionado: string
+  algoritmoSelecionado: string = ''
 
-  constructor(private element: ElementRef, public snackBar: MatSnackBar, public service: Service) {
+  constructor(private element: ElementRef, public snackBar: MatSnackBar, public service: Service, public servicoAlgoritmos: AlgoritmosService) {
     this.htmlElement = this.element.nativeElement;
     this.host = d3.select(this.element.nativeElement)
 
@@ -179,7 +180,7 @@ export class MatrizComponent implements OnInit {
         this.showError('Fim do Labirinto Não Definido')
       } else {
         explorador = new Explorador(this.maze.getStartSquare(), this.maze.getEndSquare())
-        this.executarAlgoritmo(explorador)
+        this.executarAlgoritmo(explorador, this.algoritmoSelecionado)
       }
     } else {
       this.showError('Início do Labirinto Não Definido')
@@ -196,8 +197,8 @@ export class MatrizComponent implements OnInit {
     });
   }
 
-  executarAlgoritmo(explorador: Explorador) {
-
+  executarAlgoritmo(explorador: Explorador, algoritmo: string) {
+    this.servicoAlgoritmos.algoritmos(this.algoritmoSelecionado)
   }
 }
 

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { AlgoritmosService } from './algoritmos.service';
 
 @Component({
   selector: 'app-algoritmos',
@@ -7,9 +8,17 @@ import { Component, OnInit } from '@angular/core';
 })
 export class AlgoritmosComponent implements OnInit {
 
-  constructor() { }
+  constructor(public servicoAlgoritmos: AlgoritmosService) {
+    this.iniciarListeners()
+   }
 
   ngOnInit() {
+  }
+
+  iniciarListeners() {
+    this.servicoAlgoritmos.bfsAnnounced$.subscribe(() => {
+      console.log("teste")
+    })
   }
 
 }

@@ -1,5 +1,6 @@
-import { Injectable, EventEmitter } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
+import { AlgoritmosService } from './algoritmos/algoritmos.service';
 
 @Injectable({
   providedIn: 'root'
@@ -23,7 +24,7 @@ export class Service {
   pausarAnnounced$ = this.pausarAnnouncedSource.asObservable()
   cancelarAnnounced$ = this.cancelarAnnouncedSource.asObservable()
 
-  constructor() { }
+  constructor(servicoAlgoritmo: AlgoritmosService) { }
 
   announceLimpar(limpar: boolean) {
     this.limparAnnouncedSource.next(limpar)
