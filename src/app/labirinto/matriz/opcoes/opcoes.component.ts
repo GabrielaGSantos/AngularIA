@@ -17,8 +17,8 @@ export class OpcoesComponent implements OnInit {
   ];
 
   selectedAlgorithm = ''
-  disableExecucao: boolean = true;
-  disablePlay: boolean = false;
+  disableExecucao = true;
+  disablePlay = false;
 
   constructor(public service: Service) { }
 
@@ -26,28 +26,30 @@ export class OpcoesComponent implements OnInit {
   }
 
   limpar() {
-    this.service.eventoEmitido('limpar')
+    this.service.announceLimpar(true)
   }
 
   iniciar() {
     this.disablePlay = true
-    this.service.eventoEmitido('iniciar')
-    this.service.setAlgoritmo(this.selectedAlgorithm)
+    this.service.announceIniciar(true)
   }
 
   pausar() {
-    this.service.eventoEmitido('pausar')
+    this.service.announcePausar(true)
   }
 
   cancelar() {
-    this.service.eventoEmitido('cancelar')
+    this.service.announceCancelar(true)
   }
 
   toggleExecucao() {
-    if (this.selectedAlgorithm != '')
-      this.disableExecucao = false;         
-    else
+    if (this.selectedAlgorithm !== '') {
+      this.disableExecucao = false;
+    } else {
       this.disableExecucao = true;
+    }
+
+    this.service.announceAlgoritmo(this.selectedAlgorithm)
   }
 
 
