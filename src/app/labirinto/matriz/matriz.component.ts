@@ -1,10 +1,14 @@
 import { Component, OnInit, ElementRef } from '@angular/core';
 import { MatSnackBar } from '@angular/material';
-import { Service } from './servico.service'
 
 import * as d3 from 'd3-selection'
-import * as drag from 'd3-drag'
-import { AlgoritmosService } from './algoritmos/algoritmos.service';
+
+import { SquareType } from './classes/enum'
+import { Maze } from './classes/maze'
+import { Explorador } from './classes/explorador'
+
+import { Service } from './servicos/servico.service'
+import { AlgoritmosService } from './servicos/algoritmos.service';
 
 @Component({
   selector: 'app-matriz',
@@ -13,21 +17,19 @@ import { AlgoritmosService } from './algoritmos/algoritmos.service';
 })
 
 export class MatrizComponent implements OnInit {
-  htmlElement: HTMLElement;
-  host: d3.Selection<any, any, any, any>;
+  htmlElement: HTMLElement
+  host: d3.Selection<any, any, any, any>
 
-  width = 800;
-  height = 500;
-  border_width = 0.5;
+  width = 800
+  height = 500
+  border_width = 0.5
 
-  lines = 25;
+  lines = 25
   columns = 40
-
-  teste: string
 
   maze: Maze
 
-  algoritmoSelecionado: string = ''
+  algoritmoSelecionado: string
 
   constructor(private element: ElementRef, public snackBar: MatSnackBar, public service: Service, public servicoAlgoritmos: AlgoritmosService) {
     this.htmlElement = this.element.nativeElement;
@@ -58,6 +60,7 @@ export class MatrizComponent implements OnInit {
 
   ngOnInit() {
     this.drawMaze()
+    this.modificarMatriz()
   }
 
   limpar() {
@@ -92,49 +95,13 @@ export class MatrizComponent implements OnInit {
   drawMaze() {
     const self = this
 
-    let cur_sqr;
-    let square: any;
-    let type: SquareType;
+    this.servicoAlgoritmos.matriz(this.host, this.maze)
 
     this.host.select('svg')
       .style('margin', '10px')
       .style('box-shadow', '0px 0px 3px 2px rgba(0, 0, 0, .1)')
       .attr('width', this.width)
       .attr('height', this.height)
-      .call(drag.drag()
-        .on('start', () => {
-          cur_sqr = d3.event.sourceEvent.srcElement.id;
-          square = d3.select(`#${cur_sqr}`).datum()
-
-          self.maze.click(square)
-
-          d3.select(`#${cur_sqr}`).style('fill', square.type)
-          type = square.type
-        })
-
-        .on('drag', () => {
-          if (d3.event.sourceEvent.srcElement.id != cur_sqr && (type == SquareType.path || type == SquareType.wall)) {
-            cur_sqr = d3.event.sourceEvent.srcElement.id;
-            square = d3.select(`#${cur_sqr}`).datum()
-
-            if (square.type === SquareType.start) {
-              self.maze.defineStartSquare(null)
-            }
-            if (square.type === SquareType.end) {
-              self.maze.defineEndSquare(null)
-            }
-
-            square.type = type
-
-            d3.select(`#${cur_sqr}`).style('fill', square.type)
-          }
-        })
-        .on('end', () => {
-          cur_sqr = null
-          square = null
-          type = null
-        })
-      )
 
     this.maze.square_array.forEach((line, i) => {
       this.host.select('svg')
@@ -168,12 +135,16 @@ export class MatrizComponent implements OnInit {
     })
   }
 
+  modificarMatriz() {
+    this.servicoAlgoritmos.mudancaMatrizAnnounced$.subscribe((id) => {
+      d3.select(`#${id}`).style('fill', id.type)
+    })
+  }
+
   iniciar() {
     this.service.announceIniciar(false)
 
     let explorador: Explorador;
-
-    console.log(this.algoritmoSelecionado)
 
     if (this.maze.getStartSquare()) {
       if (!this.maze.getEndSquare()) {
@@ -205,116 +176,5 @@ export class MatrizComponent implements OnInit {
 function pad(num, size) {
   const s = '000000000' + num;
   return s.substr(s.length - size);
-}
-
-enum SquareType {
-  path = '#FFF',
-  wall = '#BDBDBD',
-  start = '#09af00',
-  end = '#E53935',
-  explorador = '#B3E5FC'
-}
-
-class Square {
-  x: number
-  y: number
-  width: number
-  height: number
-  type: SquareType
-
-  constructor(x: number, y: number, width: number, height: number, type: SquareType) {
-    this.x = x
-    this.y = y
-    this.width = width
-    this.height = height
-    this.type = type
-  }
-}
-
-class Maze {
-  square_array: Array<Array<Square>>
-
-  private start_square: Square
-  private end_square: Square
-
-  constructor(lines: number, columns: number, width: number, height: number) {
-    this.square_array = new Array()
-
-    for (let i = 0; i < lines; i++) {
-      const new_line = new Array()
-
-      for (let j = 0; j < columns; j++) {
-        let new_square
-
-        if (i === 0 || i === lines - 1 || j === 0 || j === columns - 1) {
-          new_square = new Square(j, i, width / columns, height / lines, SquareType.wall)
-        } else {
-          new_square = new Square(j, i, width / columns, height / lines, SquareType.path)
-        }
-
-        new_line.push(new_square)
-      }
-
-      this.square_array.push(new_line)
-    }
-  }
-
-  click(element: any) {
-    if (element.type === SquareType.path) {
-      element.type = SquareType.wall
-    } else if (element.type === SquareType.wall) {
-      if ((!this.start_square)) {
-        element.type = SquareType.start
-        this.start_square = element
-      } else if ((!this.end_square)) {
-        element.type = SquareType.end
-        this.end_square = element
-      } else {
-        element.type = SquareType.path
-      }
-    } else if (element.type === SquareType.start) {
-      this.start_square = null
-
-      if ((!this.end_square)) {
-        element.type = SquareType.end
-        this.end_square = element
-      } else {
-        element.type = SquareType.path
-      }
-    } else if (element.type == SquareType.end) {
-      this.end_square = null
-      element.type = SquareType.path
-    }
-  }
-
-  defineStartSquare(start: Square) {
-    this.start_square = start
-  }
-
-  defineEndSquare(end: Square) {
-    this.end_square = end
-  }
-
-  getStartSquare() {
-    return this.start_square
-  }
-
-  getEndSquare() {
-    return this.end_square
-  }
-}
-
-class Explorador {
-  position_inicial: Square
-  position_final: Square
-  last_type: SquareType
-
-  constructor(initial_square: Square, final_square: Square) {
-    this.position_inicial = initial_square
-    this.last_type = initial_square.type
-    this.position_final = final_square
-
-    initial_square.type = SquareType.explorador
-  }
 }
 

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
-import { AlgoritmosService } from './algoritmos/algoritmos.service';
+import { AlgoritmosService } from './algoritmos.service';
 
 @Injectable({
   providedIn: 'root'

@@ -12,9 +12,8 @@ import { AjudaComponent } from './ajuda/ajuda.component';
 import { MenuComponent } from './labirinto/menu/menu.component';
 import { MatrizComponent } from './labirinto/matriz/matriz.component';
 import { OpcoesComponent } from './labirinto/matriz/opcoes/opcoes.component';
-import { AlgoritmosComponent } from './labirinto/matriz/algoritmos/algoritmos.component';
-import { Service } from './labirinto/matriz/servico.service';
-import { AlgoritmosService } from './labirinto/matriz/algoritmos/algoritmos.service';
+import { Service } from './labirinto/matriz/servicos/servico.service';
+import { AlgoritmosService } from './labirinto/matriz/servicos/algoritmos.service';
 
 @NgModule({
   declarations: [
@@ -25,8 +24,7 @@ import { AlgoritmosService } from './labirinto/matriz/algoritmos/algoritmos.serv
     AjudaComponent,
     MenuComponent,
     MatrizComponent,
-    OpcoesComponent,
-    AlgoritmosComponent
+    OpcoesComponent
   ],
   imports: [
     BrowserModule,

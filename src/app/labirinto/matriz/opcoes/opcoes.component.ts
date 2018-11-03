@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { AlgoritmosComponent } from '../algoritmos/algoritmos.component';
-import { Service } from '../servico.service'
+import { Component, OnInit } from '@angular/core'
+import { Service } from '../servicos/servico.service'
 
 @Component({
   selector: 'app-opcoes',
