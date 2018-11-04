@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core'
-import { Service } from '../servicos/servico.service'
+import { PainelControle } from '../servicos/painelControle.service'
 
+let self: OpcoesComponent
 @Component({
   selector: 'app-opcoes',
   templateUrl: './opcoes.component.html',
@@ -15,43 +16,70 @@ export class OpcoesComponent implements OnInit {
     { nome: 'ucs', viewNome: 'Busca de Custo Uniforme' }
   ];
 
-  selectedAlgorithm = ''
-  disableExecucao = true;
-  disablePlay = false;
+  algoritmoSelecionado = ''
+  private desabilitarParar = true;
+  private desabilitarIniciar = true;
+  private desabilitarPausar = true;
+  private desabilitarLimpar = false;
 
-  constructor(public service: Service) { }
+  constructor(public painelControleService: PainelControle) {
+    self = this
+
+    this.painelControleService.botoesAnnounced$.subscribe((array) => {
+      this.desabilitarBotoes()
+      array.forEach(botao => this.habilitarBotao(botao))
+    })
+  }
 
   ngOnInit() {
   }
 
   limpar() {
-    this.service.announceLimpar(true)
+    if (!this.desabilitarLimpar) {
+      this.painelControleService.announceLimpar(true)
+    }
   }
 
   iniciar() {
-    this.disablePlay = true
-    this.service.announceIniciar(true)
+    if (!this.desabilitarIniciar) {
+      this.painelControleService.announceIniciar(true)
+    }
   }
 
   pausar() {
-    this.service.announcePausar(true)
+    if (!this.desabilitarPausar) {
+      this.painelControleService.announcePausar(true)
+    }
   }
 
   cancelar() {
-    this.service.announceCancelar(true)
-  }
-
-  toggleExecucao() {
-    if (this.selectedAlgorithm !== '') {
-      this.disableExecucao = false;
-    } else {
-      this.disableExecucao = true;
+    if (!this.desabilitarParar) {
+      this.painelControleService.announceParar(true)
     }
-
-    this.service.announceAlgoritmo(this.selectedAlgorithm)
   }
 
+  mudarAlgoritmo() {
+    self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
+  }
 
+  desabilitarBotoes() {
+    this.desabilitarParar = true
+    this.desabilitarIniciar = true
+    this.desabilitarPausar = true
+    this.desabilitarLimpar = true
+  }
+
+  habilitarBotao(botao: string) {
+    if (botao === 'parar') {
+      this.desabilitarParar = false;
+    } else if (botao === 'iniciar') {
+      this.desabilitarIniciar = false
+    } else if (botao === 'pausar') {
+      this.desabilitarPausar = false
+    } else if (botao === 'limpar') {
+      this.desabilitarLimpar = false
+    }
+  }
 }
 
 export interface Algoritmo {

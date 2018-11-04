@@ -1,14 +1,19 @@
+// Aqui ficam as funcionalidades de desenho na tela!
+
 import { Component, OnInit, ElementRef } from '@angular/core';
 import { MatSnackBar } from '@angular/material';
 
 import * as d3 from 'd3-selection'
-
-import { SquareType } from './classes/enum'
-import { Maze } from './classes/maze'
+import * as drag from 'd3-drag'
+import { TipoCelula } from './classes/tipoCelula'
+import { Labirinto, PropriedadesLabirinto } from './classes/labirinto'
 import { Explorador } from './classes/explorador'
 
-import { Service } from './servicos/servico.service'
+import { PainelControle } from './servicos/painelControle.service'
 import { AlgoritmosService } from './servicos/algoritmos.service';
+import { Celula } from './classes/celula';
+
+let self: MatrizComponent
 
 @Component({
   selector: 'app-matriz',
@@ -16,154 +21,125 @@ import { AlgoritmosService } from './servicos/algoritmos.service';
   styleUrls: ['./matriz.component.css']
 })
 
-export class MatrizComponent implements OnInit {
+export class MatrizComponent {
   htmlElement: HTMLElement
   host: d3.Selection<any, any, any, any>
 
-  width = 800
-  height = 500
-  border_width = 0.5
+  larguraBordaQuadrado = 0.5
 
-  lines = 25
-  columns = 40
-
-  maze: Maze
+  labirinto: Labirinto
 
   algoritmoSelecionado: string
 
-  constructor(private element: ElementRef, public snackBar: MatSnackBar, public service: Service, public servicoAlgoritmos: AlgoritmosService) {
+  constructor(private element: ElementRef,
+    public snackBar: MatSnackBar,
+    public service: PainelControle,
+    public servicoAlgoritmos: AlgoritmosService) {
+
+    self = this
+
     this.htmlElement = this.element.nativeElement;
     this.host = d3.select(this.element.nativeElement)
+    this.labirinto = this.copiarLabirinto(this.servicoAlgoritmos.labirinto)
+    this.servicoAlgoritmos.mudancaLabirintoAnnounced$.subscribe(this.atualizaLabirinto)
+    this.servicoAlgoritmos.erroAnnounced$.subscribe(this.mostrarErro)
 
-    this.maze = new Maze(this.lines, this.columns, this.width, this.height)
-
-    this.iniciarListeners()
+    this.desenhaLabirinto()
   }
 
-  iniciarListeners() {
-    this.service.limparAnnounced$.subscribe((deveLimpar) => {
-      if (deveLimpar) {
-        this.limpar()
-      }
-    })
-
-    this.service.algoritmoAnnounced$.subscribe((algoritmoSelecionado) => {
-      this.algoritmoSelecionado = algoritmoSelecionado
-    })
-
-    this.service.iniciarAnnounced$.subscribe((deveIniciar) => {
-      if (deveIniciar) {
-        this.iniciar()
-      }
-    })
-  }
-
-  ngOnInit() {
-    this.drawMaze()
-    this.modificarMatriz()
-  }
-
-  limpar() {
-    this.maze.defineStartSquare(null)
-    this.maze.defineEndSquare(null)
-
-    d3.select('svg').selectAll('*').remove()
-
-    this.desenharBordas()
-    this.drawMaze()
-
-    this.service.announceLimpar(false)
-  }
-
-  desenharBordas() {
-    this.maze.square_array.forEach((line, i) => {
-      this.host.select('svg')
-        .append('g')
-        .attr('class', 'row')
-        .attr('id', `row${i}`)
-
-      line.forEach((square, j) => {
-        if (i === 0 || i === this.lines - 1 || j === 0 || j === this.columns - 1) {
-          square.type = SquareType.wall
-        } else {
-          square.type = SquareType.path
-        }
-      })
-    })
-  }
-
-  drawMaze() {
-    const self = this
-
-    this.servicoAlgoritmos.matriz(this.host, this.maze)
-
-    this.host.select('svg')
+  desenhaLabirinto() {
+    this.host
+      .append('svg')
+      .attr('id', 'desenhoLabirinto')
+      .attr('width', this.servicoAlgoritmos.propriedadesLabirinto.largura)
+      .attr('height', this.servicoAlgoritmos.propriedadesLabirinto.altura)
       .style('margin', '10px')
       .style('box-shadow', '0px 0px 3px 2px rgba(0, 0, 0, .1)')
-      .attr('width', this.width)
-      .attr('height', this.height)
+      .call(drag.drag()
+        .on('start', () => {
+          // Verifica se está com o mouse em cima de um quadrado (pois se está fora do labirinto, vai lançar erro)
+          if (d3.event.sourceEvent.srcElement.className.baseVal === 'square') {
+            this.servicoAlgoritmos.dragStarted(d3.select(`#${d3.event.sourceEvent.srcElement.id}`).datum())
+          }
+        })
+        .on('drag', () => {
+          // Verifica se está com o mouse em cima de um quadrado (pois se está fora do labirinto, vai lançar erro)
+          if (d3.event.sourceEvent.srcElement.className.baseVal === 'square') {
+            this.servicoAlgoritmos.dragged(d3.select(`#${d3.event.sourceEvent.srcElement.id}`).datum())
+          }
+        })
+        .on('end', () => {
+          this.servicoAlgoritmos.dragEnded(d3.select(`#${d3.event.sourceEvent.srcElement.id}`).datum())
+        })
+      )
 
-    this.maze.square_array.forEach((line, i) => {
+    this.labirinto.vetorCelulas.forEach((linha, posicaoLinha) => {
       this.host.select('svg')
         .append('g')
         .attr('class', 'row')
-        .attr('id', `row${i}`)
+        .attr('id', `row${posicaoLinha}`)
 
-      line.forEach(column => {
-        this.host
-          .select(`#row${i}`)
-          .datum(column)
-          .append('rect')
-          .attr('class', 'square')
-          .attr('id', `square${pad(column.x, 4)}${pad(column.y, 4)}`)
-          .attr('x', column.x * column.height)
-          .attr('y', column.y * column.width)
-          .attr('width', column.height)
-          .attr('height', column.width)
-          .style('fill', () => {
-            return column.type
-          })
-          .style('stroke', '#BDBDBD')
-          .on('mouseenter', function (d) {
-            d3.select(this).style('stroke-offset', '5px')
-            d3.select(this).style('stroke', 'white')
-          })
-          .on('mouseleave', function (d) {
-            d3.select(this).style('stroke', '#BDBDBD')
-          })
+      linha.forEach(celula => {
+        this.desenhaCelula(celula)
       })
     })
   }
 
-  modificarMatriz() {
-    this.servicoAlgoritmos.mudancaMatrizAnnounced$.subscribe((id) => {
-      d3.select(`#${id}`).style('fill', id.type)
+  desenhaCelula(celula) {
+    this.host
+      .select(`#row${celula.y}`)
+      .datum(celula)
+      .append('rect')
+      .attr('class', 'square')
+      .attr('id', `square${zeroAEsquerda(celula.x, 4)}${zeroAEsquerda(celula.y, 4)}`)
+      .attr('x', celula.x * celula.altura)
+      .attr('y', celula.y * celula.largura)
+      .attr('width', celula.altura)
+      .attr('height', celula.largura)
+      .style('fill', () => {
+        return celula.tipo
+      })
+      .style('stroke', '#BDBDBD')
+      .on('mouseenter', function (d) {
+        d3.select(this).style('stroke-offset', '5px')
+        d3.select(this).style('stroke', 'white')
+      })
+      .on('mouseleave', function (d) {
+        d3.select(this).style('stroke', '#BDBDBD')
+      })
+  }
+
+  atualizaLabirinto(novoLabirinto: Labirinto) {
+    self.labirinto.celulasDiferentes(novoLabirinto).forEach((celulaDiferente) => {
+      self.host
+        .select(`#square${zeroAEsquerda(celulaDiferente.x, 4)}${zeroAEsquerda(celulaDiferente.y, 4)}`)
+        .style('fill', celulaDiferente.tipo)
+        .datum(celulaDiferente)
     })
+
+    self.labirinto = self.copiarLabirinto(self.servicoAlgoritmos.labirinto)
   }
 
-  iniciar() {
-    this.service.announceIniciar(false)
+  copiarLabirinto(novoLabirinto: Labirinto) {
+    const labirinto = new Labirinto(novoLabirinto.propriedades)
+    labirinto.vetorCelulas = new Array()
 
-    let explorador: Explorador;
+    novoLabirinto.vetorCelulas.forEach((linha) => {
+      let novaLinha = new Array<Celula>()
 
-    if (this.maze.getStartSquare()) {
-      if (!this.maze.getEndSquare()) {
-        this.showError('Fim do Labirinto Não Definido')
-      } else {
-        explorador = new Explorador(this.maze.getStartSquare(), this.maze.getEndSquare())
-        this.executarAlgoritmo(explorador, this.algoritmoSelecionado)
-      }
-    } else {
-      this.showError('Início do Labirinto Não Definido')
-    }
+      // É neceessário criar um novo quadrado, senão será feita referência ao de Algoritmo, e buga tudo!
+      linha.forEach((celula) => {
+        novaLinha.push(new Celula(celula.x, celula.y, celula.largura, celula.altura, celula.tipo))
+      })
+
+      labirinto.vetorCelulas.push(novaLinha)
+    })
+
+    return labirinto
   }
 
-  pausar() { }
-
-  cancelar() { }
-
-  showError(message: string) {
-    this.snackBar.open(message, 'Fechar', {
+  mostrarErro(mensagem: string) {
+    self.snackBar.open(mensagem, 'Fechar', {
       duration: 2000
     });
   }
@@ -173,7 +149,7 @@ export class MatrizComponent implements OnInit {
   }
 }
 
-function pad(num, size) {
+function zeroAEsquerda(num, size) {
   const s = '000000000' + num;
   return s.substr(s.length - size);
 }

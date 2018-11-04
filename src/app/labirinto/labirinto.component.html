@@ -1,1 +1,19 @@
-<app-labirinto-menu></app-labirinto-menu>
+<div class="tab_container">
+    <mat-tab-group mat-align-tabs="center">
+        <mat-tab label="Execução">
+            <mat-grid-list cols="4" rowHeight="1:1.7" style="vertical-align: 0">
+                <mat-grid-tile colspan="3">
+                    <div class='matriz-container' style="padding-left: 50px; margin-top: 25px">
+                        <app-matriz></app-matriz>
+                    </div>
+                </mat-grid-tile>
+                <mat-grid-tile class='grid-tile'>
+                    <div class="margens">
+                        <app-opcoes (event)="handleEvent($event)"></app-opcoes>
+                    </div>
+                </mat-grid-tile>
+            </mat-grid-list>
+        </mat-tab>
+        <mat-tab label="Estatísticas"> Estatísticas </mat-tab>
+    </mat-tab-group>
+</div>

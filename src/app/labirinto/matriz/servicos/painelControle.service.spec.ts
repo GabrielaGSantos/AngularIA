@@ -1,12 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Service } from './servico.service';
+import { PainelControle } from './painelControle.service';
 
 describe('ServicoService', () => {
   beforeEach(() => TestBed.configureTestingModule({}));
 
   it('should be created', () => {
-    const service: Service = TestBed.get(Service);
+    const service: PainelControle = TestBed.get(PainelControle);
     expect(service).toBeTruthy();
   });
 });

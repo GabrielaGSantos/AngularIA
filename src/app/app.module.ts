@@ -9,10 +9,9 @@ import { TopMenuComponent } from './top-menu/top-menu.component';
 import { IndexComponent } from './index/index.component';
 import { LabirintoComponent } from './labirinto/labirinto.component';
 import { AjudaComponent } from './ajuda/ajuda.component';
-import { MenuComponent } from './labirinto/menu/menu.component';
 import { MatrizComponent } from './labirinto/matriz/matriz.component';
 import { OpcoesComponent } from './labirinto/matriz/opcoes/opcoes.component';
-import { Service } from './labirinto/matriz/servicos/servico.service';
+import { PainelControle } from './labirinto/matriz/servicos/painelControle.service';
 import { AlgoritmosService } from './labirinto/matriz/servicos/algoritmos.service';
 
 @NgModule({
@@ -22,7 +21,6 @@ import { AlgoritmosService } from './labirinto/matriz/servicos/algoritmos.servic
     IndexComponent,
     LabirintoComponent,
     AjudaComponent,
-    MenuComponent,
     MatrizComponent,
     OpcoesComponent
   ],
@@ -33,7 +31,7 @@ import { AlgoritmosService } from './labirinto/matriz/servicos/algoritmos.servic
     MaterialModule
   ],
   providers: [
-    Service,
+    PainelControle,
     AlgoritmosService
   ],
   bootstrap: [AppComponent]

@@ -1,69 +1,155 @@
 import { Injectable } from '@angular/core';
 
-import * as d3 from 'd3-selection'
-import * as drag from 'd3-drag'
 import { Subject } from 'rxjs';
-import { SquareType } from '../classes/enum';
-import { Maze } from '../classes/maze';
+import { TipoCelula } from '../classes/tipoCelula';
+import { Labirinto, PropriedadesLabirinto } from '../classes/labirinto';
+import { Celula } from '../classes/celula';
+import { PainelControle } from './painelControle.service';
+import { Explorador } from '../classes/explorador';
 
+let self: AlgoritmosService
 @Injectable({
   providedIn: 'root'
 })
 export class AlgoritmosService {
+  propriedadesLabirinto: PropriedadesLabirinto = {
+    altura: 500,
+    largura: 800,
+    numColunas: 40,
+    numLinhas: 25
+  }
 
-  constructor() { }
+  // Propriedades para Drag
+  ultimaCelulaAvaliada: Celula;
+  tipoAvaliado: TipoCelula;
 
-  private mudancaMatrizAnnounced = new Subject<any>()
-  mudancaMatrizAnnounced$ = this.mudancaMatrizAnnounced.asObservable()
+  // Algoritmo a Ser Executado
+  algoritmoSelecionado: string;
+  erro: string;
 
+  // Observável de Mundança no Labirinto
+  private mudancaLabirintoAnnounceSource = new Subject<Labirinto>()
+  mudancaLabirintoAnnounced$ = this.mudancaLabirintoAnnounceSource.asObservable()
+  labirinto = new Labirinto(this.propriedadesLabirinto)
 
-  matriz(host: d3.Selection<any, any, any, any>, maze: Maze) {
+  private erroAnnounceSource = new Subject<string>()
+  erroAnnounced$ = this.erroAnnounceSource.asObservable()
 
-    console.log(maze)
+  private statusAlgoritmo = 'parado'
 
-    let cur_sqr;
-    let square: any;
-    let type: SquareType;
+  constructor(public painelControleService: PainelControle) {
+    self = this
+    this.mudancaLabirintoAnnounceSource.next(this.labirinto)
+    this.iniciarListeners()
+  }
 
-    host.select('svg')
-      .call(drag.drag()
-        .on('start', () => {
-          cur_sqr = d3.event.sourceEvent.srcElement.id;
-          square = d3.select(`#${cur_sqr}`).datum()
-
-          maze.click(square)
-
-          this.mudancaMatrizAnnounced.next(cur_sqr)
-          type = square.type
-        })
-
-        .on('drag', () => {
-          if (d3.event.sourceEvent.srcElement.id != cur_sqr && (type == SquareType.path || type == SquareType.wall)) {
-            cur_sqr = d3.event.sourceEvent.srcElement.id;
-            square = d3.select(`#${cur_sqr}`).datum()
-
-            if (square.type === SquareType.start) {
-              maze.defineStartSquare(null)
-            }
-            if (square.type === SquareType.end) {
-              maze.defineEndSquare(null)
-            }
-
-            square.type = type
-
-            this.mudancaMatrizAnnounced.next(cur_sqr)
-          }
-        })
-        .on('end', () => {
-          cur_sqr = null
-          square = null
-          type = null
-        })
-      )
+  iniciarListeners() {
+    this.painelControleService.limparAnnounced$.subscribe(this.limparLabirinto)
+    this.painelControleService.algoritmoAnnounced$.subscribe(this.mudarAlgoritmo)
+    this.painelControleService.iniciarAnnounced$.subscribe(this.iniciarAlgoritmo)
+    this.painelControleService.pausarAnnounced$.subscribe(this.pausarAlgoritmo)
+    this.painelControleService.pararAnnounced$.subscribe(this.pararAlgoritmo)
   }
 
   algoritmos(algoritmo: string) {
-    if (algoritmo == "bfs")
-      console.log("é bfs")
+    if (algoritmo === 'bfs') {
+      console.log('é bfs')
+    }
+  }
+
+  dragStarted(celulaAtual) {
+    if (self.statusAlgoritmo === 'parado') {
+      this.labirinto.click(celulaAtual)
+      this.ultimaCelulaAvaliada = celulaAtual
+      this.tipoAvaliado = this.labirinto.vetorCelulas[celulaAtual.y][celulaAtual.x].tipo
+      this.mudancaLabirintoAnnounceSource.next(this.labirinto)
+    }
+  }
+
+  dragged(celulaAtual) {
+    if (self.statusAlgoritmo === 'parado' && !celulaAtual.igual(this.ultimaCelulaAvaliada)
+      && (this.tipoAvaliado === TipoCelula.caminho || this.tipoAvaliado === TipoCelula.parede)) {
+      this.ultimaCelulaAvaliada = celulaAtual;
+
+      if (this.ultimaCelulaAvaliada.tipo === TipoCelula.inicio) {
+        this.labirinto.setPosicaoInicial(null)
+      }
+      if (this.ultimaCelulaAvaliada.tipo === TipoCelula.fim) {
+        this.labirinto.setPosicaoFinal(null)
+      }
+
+      this.labirinto.vetorCelulas[celulaAtual.y][celulaAtual.x].tipo = this.tipoAvaliado
+    }
+
+    this.mudancaLabirintoAnnounceSource.next(this.labirinto)
+  }
+
+  dragEnded(curSquare) {
+    this.ultimaCelulaAvaliada = null
+    this.tipoAvaliado = null
+  }
+
+  limparLabirinto(sujo: boolean) {
+    if (sujo) {
+      self.labirinto = new Labirinto(self.propriedadesLabirinto)
+      self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+    }
+  }
+
+  mudarAlgoritmo(algoritmoNovo: string) {
+    self.algoritmoSelecionado = algoritmoNovo
+    self.pararAlgoritmo(true)
+    self.painelControleService.habilitarBotao('iniciar')
+    self.painelControleService.habilitarBotao('limpar')
+    self.painelControleService.desabilitarBotao('parar')
+    self.painelControleService.desabilitarBotao('pausar')
+  }
+
+  iniciarAlgoritmo(podeIniciar: boolean) {
+    if (podeIniciar) {
+      console.log('iniciar')
+      let explorador: Explorador;
+
+      if (self.labirinto.getPosicaoInicial()) {
+        if (self.labirinto.getPosicaoFinal()) {
+          explorador = new Explorador(self.labirinto.getPosicaoInicial(), self.labirinto.getPosicaoFinal())
+          self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+          self.painelControleService.desabilitarBotao('iniciar')
+          self.painelControleService.desabilitarBotao('limpar')
+          self.painelControleService.habilitarBotao('parar')
+          self.painelControleService.habilitarBotao('pausar')
+          self.statusAlgoritmo = 'rodando'
+        } else {
+          self.erroAnnounceSource.next('Fim do Labirinto Não Definido')
+        }
+      } else {
+        self.erroAnnounceSource.next('Início do Labirinto Não Definido')
+      }
+    }
+
+  }
+
+  pausarAlgoritmo(podePausar: boolean) {
+    if (podePausar) {
+      console.log('pausar')
+      self.statusAlgoritmo = 'pausado'
+      self.painelControleService.habilitarBotao('iniciar')
+      self.painelControleService.desabilitarBotao('limpar')
+      self.painelControleService.habilitarBotao('parar')
+      self.painelControleService.desabilitarBotao('pausar')
+    }
+  }
+
+  pararAlgoritmo(podeParar: boolean) {
+    if (podeParar) {
+      console.log('parar')
+      self.statusAlgoritmo = 'parado'
+      self.painelControleService.habilitarBotao('iniciar')
+      self.painelControleService.habilitarBotao('limpar')
+      self.painelControleService.desabilitarBotao('parar')
+      self.painelControleService.desabilitarBotao('pausar')
+      self.limparLabirinto(true)
+    }
   }
 }
+
