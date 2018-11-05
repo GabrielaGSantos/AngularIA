@@ -143,10 +143,6 @@ export class MatrizComponent {
       duration: 2000
     });
   }
-
-  executarAlgoritmo(explorador: Explorador, algoritmo: string) {
-    this.servicoAlgoritmos.algoritmos(this.algoritmoSelecionado)
-  }
 }
 
 function zeroAEsquerda(num, size) {

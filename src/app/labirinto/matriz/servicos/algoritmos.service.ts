@@ -6,6 +6,7 @@ import { Labirinto, PropriedadesLabirinto } from '../classes/labirinto';
 import { Celula } from '../classes/celula';
 import { PainelControle } from './painelControle.service';
 import { Explorador } from '../classes/explorador';
+import { No } from '../classes/no';
 
 let self: AlgoritmosService
 @Injectable({
@@ -26,6 +27,8 @@ export class AlgoritmosService {
   // Algoritmo a Ser Executado
   algoritmoSelecionado: string;
   erro: string;
+  
+  explorador: Explorador;
 
   // Observável de Mundança no Labirinto
   private mudancaLabirintoAnnounceSource = new Subject<Labirinto>()
@@ -51,10 +54,10 @@ export class AlgoritmosService {
     this.painelControleService.pararAnnounced$.subscribe(this.pararAlgoritmo)
   }
 
-  algoritmos(algoritmo: string) {
-    if (algoritmo === 'bfs') {
-      console.log('é bfs')
-    }
+  algoritmos() {    
+    
+    if (this.algoritmoSelecionado === 'bfs')
+      this.bfs()
   }
 
   dragStarted(celulaAtual) {
@@ -108,17 +111,15 @@ export class AlgoritmosService {
   iniciarAlgoritmo(podeIniciar: boolean) {
     if (podeIniciar) {
       console.log('iniciar')
-      let explorador: Explorador;
 
       if (self.labirinto.getPosicaoInicial()) {
-        if (self.labirinto.getPosicaoFinal()) {
-          explorador = new Explorador(self.labirinto.getPosicaoInicial(), self.labirinto.getPosicaoFinal())
-          self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+        if (self.labirinto.getPosicaoFinal()) {          
           self.painelControleService.desabilitarBotao('iniciar')
           self.painelControleService.desabilitarBotao('limpar')
           self.painelControleService.habilitarBotao('parar')
           self.painelControleService.habilitarBotao('pausar')
           self.statusAlgoritmo = 'rodando'
+          self.algoritmos()
         } else {
           self.erroAnnounceSource.next('Fim do Labirinto Não Definido')
         }
@@ -148,8 +149,52 @@ export class AlgoritmosService {
       self.painelControleService.habilitarBotao('limpar')
       self.painelControleService.desabilitarBotao('parar')
       self.painelControleService.desabilitarBotao('pausar')
-      self.limparLabirinto(true)
+      self.explorador = null
+      
+      //self.limparLabirinto(true) tem q fazer com q tire a pintura da execução
     }
+  }
+
+  bfs(){
+
+    self.explorador = new Explorador(self.labirinto.getPosicaoInicial(), self.labirinto.getPosicaoFinal())    
+    self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+
+    let borda: Array<No> = new Array<No>()    
+    let estado: Explorador = self.explorador
+
+    let possibilidades
+
+    let no: No = new No(estado, null, 1, null)
+    let filho: No
+
+    borda.push(no)
+    console.log(no)
+    while (borda.length > 0){
+      
+      estado = no.estado 
+      
+      if(estado.checarObjetivo()){
+        self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+        break
+      }
+      
+      else{
+        no = borda.shift()
+        estado = no.estado
+
+        possibilidades = estado.checarAcoes(this.labirinto)
+
+        for(let possibilidade in possibilidades){      
+          filho = no.criarNoFilho(possibilidade, 1, null)
+          self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+
+          if(filho.estado != (borda.filter(item => item.estado)))
+            borda.push(filho)
+        }
+
+      }
+    } 
   }
 }
 
