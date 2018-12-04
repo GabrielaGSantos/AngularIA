@@ -31,6 +31,13 @@
                 </mat-option>
             </mat-select>
         </mat-form-field>
+        <mat-form-field>
+            <mat-select placeholder="Selecione a Heurística" [(value)]="heuristicaSelecionada" [disabled]="habilitarHeuristica" (selectionChange)="mudarHeuristica()" (click)="cancelar()">
+                <mat-option *ngFor="let heu of heus" [value]="heu.nome">
+                    {{heu.viewNome}}
+                </mat-option>
+            </mat-select>
+        </mat-form-field>
     </mat-expansion-panel>
 
     <mat-expansion-panel hideToggle>

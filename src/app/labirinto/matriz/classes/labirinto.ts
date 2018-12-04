@@ -24,7 +24,7 @@ export class Labirinto {
           numLinha,
           this.propriedades.largura / this.propriedades.numColunas,
           this.propriedades.altura / this.propriedades.numLinhas,
-          (this.eBorda(numLinha, linha.length) ? TipoCelula.parede : TipoCelula.caminho)))
+          (this.eBorda(numLinha, linha.length) ? TipoCelula.parede : TipoCelula.parede)))
       } // inicializa celulas
     })
   }

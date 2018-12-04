@@ -3,5 +3,7 @@ export enum TipoCelula {
   parede = '#BDBDBD',
   inicio = '#09af00',
   fim = '#E53935',
-  explorador = '#B3E5FC'
+  explorador = '#B3E5FC',
+  exploradorFim = '#000',
+  solucao = '#F06292'
 }

@@ -10,6 +10,9 @@ export class PainelControle {
   // Anúncio do evento de mudar de algoritmo: quando mudar de algoritmo, ele assume o nome do algoritmo
   private algoritmoAnnouncedSource = new Subject<string>()
 
+  // Anúncio do evento de mudar de algoritmo: quando mudar de heurística, ele assume o nome da heuristica
+  private heristicaAnnouncedSource = new Subject<string>()  
+
   // Anúncio dos eventos de controle: quando o botão for pressionado, isso muda pra verdadeiro
   private limparAnnouncedSource = new Subject<boolean>()
   private iniciarAnnoncedSource = new Subject<boolean>()
@@ -18,6 +21,7 @@ export class PainelControle {
 
   // Observadores: eles respondem o valor atual da variável e tem umas funções interessates de detecção de mudanças de estado!
   algoritmoAnnounced$ = this.algoritmoAnnouncedSource.asObservable()
+  heristicaAnnounced$ = this.heristicaAnnouncedSource.asObservable()
 
   limparAnnounced$ = this.limparAnnouncedSource.asObservable()
   iniciarAnnounced$ = this.iniciarAnnoncedSource.asObservable()
@@ -52,6 +56,10 @@ export class PainelControle {
 
   announceAlgoritmo(algoritmo: string) {
     self.algoritmoAnnouncedSource.next(algoritmo)
+  }
+
+  announceHeuristica(heuristica: string) {
+    self.heristicaAnnouncedSource.next(heuristica)
   }
 
   habilitarBotao(botao: string) {

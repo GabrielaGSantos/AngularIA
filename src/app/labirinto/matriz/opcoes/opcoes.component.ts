@@ -9,14 +9,23 @@ let self: OpcoesComponent
 })
 
 export class OpcoesComponent implements OnInit {
-
+  
   algs: Algoritmo[] = [
     { nome: 'bfs', viewNome: 'Busca em Largura' },
     { nome: 'dfs', viewNome: 'Busca em Profundidade' },
-    { nome: 'ucs', viewNome: 'Busca de Custo Uniforme' }
+    { nome: 'ucs', viewNome: 'Busca de Custo Uniforme' },
+    { nome: 'a*', viewNome: 'Busca A*' }
+  ];
+
+  heus: Heuristica[] = [
+    { nome: 'mtt', viewNome: ' Distância de Manhattan' },
+    { nome: 'euc', viewNome: 'Distância Euclideana'}
   ];
 
   algoritmoSelecionado = ''
+  heuristicaSelecionada = ''
+  habilitarHeuristica = true
+
   private desabilitarParar = true;
   private desabilitarIniciar = true;
   private desabilitarPausar = true;
@@ -59,7 +68,19 @@ export class OpcoesComponent implements OnInit {
   }
 
   mudarAlgoritmo() {
-    self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
+    if(self.algoritmoSelecionado == 'a*'){
+      console.log("heuristica habilitada")
+      self.habilitarHeuristica = false
+      self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
+    }      
+    else{
+      self.habilitarHeuristica = true      
+      self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
+    }
+  }
+
+  mudarHeuristica() {
+    self.painelControleService.announceHeuristica(self.heuristicaSelecionada)
   }
 
   desabilitarBotoes() {
@@ -83,6 +104,11 @@ export class OpcoesComponent implements OnInit {
 }
 
 export interface Algoritmo {
+  nome: string;
+  viewNome: string;
+}
+
+export interface Heuristica {
   nome: string;
   viewNome: string;
 }
