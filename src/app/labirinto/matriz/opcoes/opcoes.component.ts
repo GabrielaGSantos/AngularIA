@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core'
 import { PainelControle } from '../servicos/painelControle.service'
+import { SafeUrl } from '@angular/platform-browser';
+import { Subject } from 'rxjs';
+import { post } from 'selenium-webdriver/http';
 
 let self: OpcoesComponent
 @Component({
@@ -9,7 +12,7 @@ let self: OpcoesComponent
 })
 
 export class OpcoesComponent implements OnInit {
-  
+
   algs: Algoritmo[] = [
     { nome: 'bfs', viewNome: 'Busca em Largura' },
     { nome: 'dfs', viewNome: 'Busca em Profundidade' },
@@ -19,11 +22,13 @@ export class OpcoesComponent implements OnInit {
 
   heus: Heuristica[] = [
     { nome: 'mtt', viewNome: ' Distância de Manhattan' },
-    { nome: 'euc', viewNome: 'Distância Euclideana'}
+    { nome: 'euc', viewNome: 'Distância Euclideana' }
   ];
 
   algoritmoSelecionado = ''
   heuristicaSelecionada = ''
+  salvarMatrizLabirinto = ''
+  abrirMatrizLabirinto = ''
   habilitarHeuristica = true
 
   private desabilitarParar = true;
@@ -31,12 +36,19 @@ export class OpcoesComponent implements OnInit {
   private desabilitarPausar = true;
   private desabilitarLimpar = false;
 
+  linkDownloadLabirinto: SafeUrl
+
+
   constructor(public painelControleService: PainelControle) {
     self = this
 
     this.painelControleService.botoesAnnounced$.subscribe((array) => {
       this.desabilitarBotoes()
       array.forEach(botao => this.habilitarBotao(botao))
+    })
+
+    this.painelControleService.linkDownloadLabirintoAnnounced$.subscribe((uri) => {
+      this.linkDownloadLabirinto = uri;
     })
   }
 
@@ -46,6 +58,18 @@ export class OpcoesComponent implements OnInit {
   limpar() {
     if (!this.desabilitarLimpar) {
       this.painelControleService.announceLimpar(true)
+    }
+  }
+
+  abrirLabirinto(inputValue: any) {
+    var file: File = inputValue.target.files[0];
+    if (file) {
+      var reader = new FileReader();
+      reader.readAsText(file);
+      reader.onload = function (event: any) {
+        console.log(JSON.parse(event.target.result))
+        self.painelControleService.announceAbrir(JSON.parse(event.target.result))
+      }
     }
   }
 
@@ -68,13 +92,13 @@ export class OpcoesComponent implements OnInit {
   }
 
   mudarAlgoritmo() {
-    if(self.algoritmoSelecionado == 'a*'){
+    if (self.algoritmoSelecionado == 'a*') {
       console.log("heuristica habilitada")
       self.habilitarHeuristica = false
       self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
-    }      
-    else{
-      self.habilitarHeuristica = true      
+    }
+    else {
+      self.habilitarHeuristica = true
       self.painelControleService.announceAlgoritmo(self.algoritmoSelecionado)
     }
   }

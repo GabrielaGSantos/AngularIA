@@ -7,6 +7,7 @@ import { Celula } from '../classes/celula';
 import { PainelControle } from './painelControle.service';
 import { Explorador } from '../classes/explorador';
 import { No } from '../classes/no';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 let self: AlgoritmosService
 
@@ -20,6 +21,7 @@ export class AlgoritmosService {
     numColunas: 40,
     numLinhas: 25
   }
+
 
   // Propriedades para Drag
   ultimaCelulaAvaliada: Celula;
@@ -43,12 +45,13 @@ export class AlgoritmosService {
   mudancaLabirintoAnnounced$ = this.mudancaLabirintoAnnounceSource.asObservable()
   labirinto = new Labirinto(this.propriedadesLabirinto)
 
+
   private erroAnnounceSource = new Subject<string>()
   erroAnnounced$ = this.erroAnnounceSource.asObservable()
 
   private statusAlgoritmo = 'parado'
 
-  constructor(public painelControleService: PainelControle) {
+  constructor(public painelControleService: PainelControle, private sanitizer: DomSanitizer) {
     self = this
     this.mudancaLabirintoAnnounceSource.next(this.labirinto)
     this.iniciarListeners()
@@ -56,6 +59,8 @@ export class AlgoritmosService {
 
   iniciarListeners() {
     this.painelControleService.limparAnnounced$.subscribe(this.limparLabirinto)
+    this.painelControleService.salvarAnnounced$.subscribe(this.salvarLabirinto)
+    this.painelControleService.abrirAnnounced$.subscribe(this.abrirLabirinto)
     this.painelControleService.algoritmoAnnounced$.subscribe(this.mudarAlgoritmo)
     this.painelControleService.heristicaAnnounced$.subscribe(this.mudarHeuristica)
     this.painelControleService.iniciarAnnounced$.subscribe(this.iniciarAlgoritmo)
@@ -117,6 +122,41 @@ export class AlgoritmosService {
     }
   }
 
+  salvarLabirinto(salvar: boolean) {
+    if (salvar) {
+      var text = JSON.stringify(self.labirinto)
+      var uri = self.sanitizer.bypassSecurityTrustUrl('data:text/json;charset=UTF-8,' + encodeURIComponent(text))
+
+      self.painelControleService.announcelinkDownloadLabirinto(uri)
+    }
+  }
+
+  abrirLabirinto(labirinto: Labirinto) {
+    let novoLabirinto = new Labirinto(labirinto.propriedades)
+    novoLabirinto.vetorCelulas = new Array<Array<Celula>>()
+
+    labirinto.vetorCelulas.forEach((linha, i) => {
+      novoLabirinto.vetorCelulas.push(new Array<Celula>())
+      linha.forEach((celula, j) => {
+        let novaCelula = new Celula(celula.x, celula.y, celula.largura, celula.altura, celula.tipo)
+        novoLabirinto.vetorCelulas[i].push(novaCelula)
+      })
+    })
+
+    let posicaoInicial = novoLabirinto.vetorCelulas[labirinto.posicaoInicial.y][labirinto.posicaoInicial.x]
+    let posicaoFinal = novoLabirinto.vetorCelulas[labirinto.posicaoFinal.y][labirinto.posicaoFinal.x]
+
+    novoLabirinto.vetorCelulas[posicaoInicial.y][posicaoInicial.x] = posicaoInicial
+    novoLabirinto.vetorCelulas[posicaoFinal.y][posicaoFinal.x] = posicaoFinal
+
+    novoLabirinto.setPosicaoFinal(posicaoFinal)
+    novoLabirinto.setPosicaoInicial(posicaoInicial)
+
+    self.labirinto = novoLabirinto;
+
+    self.mudancaLabirintoAnnounceSource.next(self.labirinto)
+  }
+
   mudarAlgoritmo(algoritmoNovo: string) {
     self.algoritmoSelecionado = algoritmoNovo
     self.pararAlgoritmo(true)
@@ -167,8 +207,6 @@ export class AlgoritmosService {
       self.painelControleService.desabilitarBotao('limpar')
       self.painelControleService.habilitarBotao('parar')
       self.painelControleService.desabilitarBotao('pausar')
-
-      self.bfs_iter()
     }
   }
 
@@ -289,7 +327,7 @@ export class AlgoritmosService {
     }
   }
 
-  ucs(){
+  ucs() {
     self.explorador = new Explorador(self.labirinto.getPosicaoInicial(), self.labirinto.getPosicaoFinal())
     self.mudancaLabirintoAnnounceSource.next(self.labirinto)
 
@@ -301,7 +339,7 @@ export class AlgoritmosService {
     self.ucs_iter()
   }
 
-  ucs_iter(){
+  ucs_iter() {
     if (self.borda.length == 0)
       return
 
@@ -327,11 +365,14 @@ export class AlgoritmosService {
           self.borda.push(filho)
 
         else if (self.borda.filter(item => filho.estado == item.estado).length == 0) {
-          this.adicionarOrdenado(self.borda, filho, false)
+          this.adicionarOrdenado(self.borda, filho)
         }
 
         else {
-          this.adicionarOrdenado(self.borda, filho, true)
+          self.borda.forEach((item, i) => {
+            if (no.estado == item.estado && no.custo < item.custo)
+              self.borda.splice(i, 1, filho)
+          })
         }
       })
     }
@@ -383,11 +424,14 @@ export class AlgoritmosService {
           self.borda.push(filho)
 
         else if (self.borda.filter(item => filho.estado == item.estado).length == 0) {
-          this.adicionarOrdenado(self.borda, filho, false)
+          this.adicionarOrdenado(self.borda, filho)
         }
 
         else {
-          this.adicionarOrdenado(self.borda, filho, true)
+          self.borda.forEach((item, i) => {
+            if (no.estado == item.estado && no.funcao < item.funcao)
+              self.borda.splice(i, 1, filho)
+          })
         }
       })
     }
@@ -400,33 +444,15 @@ export class AlgoritmosService {
     }
   }
 
-  adicionarOrdenado(borda: Array<No>, no: No, replace: boolean) {
+  adicionarOrdenado(borda: Array<No>, no: No) {
     let pos = 0;
 
-    if(self.algoritmoSelecionado == 'a*'){
-      borda.forEach((item, i) => {
-        if (no.funcao > item.funcao)
-          pos = i;
-      })
-  
-      if(replace)
-        borda.splice(pos, 1, no)
-      else
-        borda.splice(pos+1, 0, no)
-    }
+    borda.forEach((item, i) => {
+      if (no.funcao > item.funcao)
+        pos = i;
+    })
 
-    else if(self.algoritmoSelecionado == 'ucs'){
-      borda.forEach((item, i) => {
-        if (no.custo > item.custo)
-          pos = i;
-      })
-  
-      if(replace)
-        borda.splice(pos, 1, no)
-      else
-        borda.splice(pos+1, 0, no)
-    }
-        
+    borda.splice(pos + 1, 0, no)
   }
 
   gerarCusto(no: No) {

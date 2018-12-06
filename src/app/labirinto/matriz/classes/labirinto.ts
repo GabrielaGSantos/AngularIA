@@ -11,8 +11,8 @@ export interface PropriedadesLabirinto {
 export class Labirinto {
   vetorCelulas: Array<Array<Celula>>
 
-  private posicaoInicial: Celula
-  private posicaoFinal: Celula
+  posicaoInicial: Celula
+  posicaoFinal: Celula
 
   constructor(public propriedades: PropriedadesLabirinto) {
     this.vetorCelulas = new Array() // inicializa vetor
@@ -74,14 +74,15 @@ export class Labirinto {
   }
 
   // Retorna um vetor unidimensional que contem as celulas diferentes deste labirinto e outroLabirinto
-  celulasDiferentes(outroLabirinto: Labirinto): Array<Celula> {
+  celulasDiferentes(novoLabirinto: Labirinto): Array<Celula> {
     const diferenca = new Array<Celula>()
 
     this.vetorCelulas.forEach((linha, posicaoLinha) => {
       linha.forEach((celula, posicaoColuna) => {
-        if (!outroLabirinto.vetorCelulas[posicaoLinha][posicaoColuna]
-          .igual(celula)) {
-          diferenca.push(outroLabirinto.vetorCelulas[posicaoLinha][posicaoColuna])
+        if (!celula.igual(novoLabirinto.vetorCelulas[posicaoLinha][posicaoColuna])) {
+          let celulaAntiga = novoLabirinto.vetorCelulas[posicaoLinha][posicaoColuna];
+          let novaCelula = new Celula(celulaAntiga.x, celulaAntiga.y, celula.largura, celulaAntiga.altura, celulaAntiga.tipo)
+          diferenca.push(novaCelula)
         }
       })
     })

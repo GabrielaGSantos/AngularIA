@@ -7,9 +7,20 @@
 
         </mat-expansion-panel-header>
 
-        <button mat-raised-button color="accent" [disabled]="desabilitarLimpar" (click)="limpar()">
-      <mat-icon>delete</mat-icon>
-    </button>
+        <button mat-raised-button color="accent" style="margin-right: 10px" [disabled]="desabilitarLimpar" (click)="limpar()">
+            <mat-icon>delete</mat-icon>
+        </button>
+        <a [href]='linkDownloadLabirinto' download='download.json'>
+            <button mat-raised-button color="accent" style="margin-right: 10px" [disabled]="desabilitarLimpar">
+                <mat-icon>save</mat-icon>
+            </button>
+        </a>
+        <input style="display: none" id="input-labirinto-id" single type='file' accept='.json' (change)="abrirLabirinto($event)" />
+        <button mat-raised-button color="accent" style="margin-right: 10px;" [disabled]="desabilitarLimpar">
+            
+                <mat-icon style="padding: 0"><label for='input-labirinto-id'>create_new_folder</label></mat-icon>
+            
+        </button>
 
     </mat-expansion-panel>
 
@@ -25,14 +36,16 @@
         </mat-expansion-panel-header>
 
         <mat-form-field>
-            <mat-select placeholder="Selecione o Algoritmo" [(value)]="algoritmoSelecionado" (selectionChange)="mudarAlgoritmo()" (click)="cancelar()">
+            <mat-select placeholder="Selecione o Algoritmo" [(value)]="algoritmoSelecionado" (selectionChange)="mudarAlgoritmo()"
+                (click)="cancelar()">
                 <mat-option *ngFor="let alg of algs" [value]="alg.nome">
                     {{alg.viewNome}}
                 </mat-option>
             </mat-select>
         </mat-form-field>
         <mat-form-field>
-            <mat-select placeholder="Selecione a Heurística" [(value)]="heuristicaSelecionada" [disabled]="habilitarHeuristica" (selectionChange)="mudarHeuristica()" (click)="cancelar()">
+            <mat-select placeholder="Selecione a Heurística" [(value)]="heuristicaSelecionada" [disabled]="habilitarHeuristica"
+                (selectionChange)="mudarHeuristica()" (click)="cancelar()">
                 <mat-option *ngFor="let heu of heus" [value]="heu.nome">
                     {{heu.viewNome}}
                 </mat-option>

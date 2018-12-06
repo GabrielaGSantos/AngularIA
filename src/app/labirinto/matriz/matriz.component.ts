@@ -118,6 +118,8 @@ export class MatrizComponent {
     })
 
     self.labirinto = self.copiarLabirinto(self.servicoAlgoritmos.labirinto)
+
+    self.service.announceSalvar(true)
   }
 
   copiarLabirinto(novoLabirinto: Labirinto) {
