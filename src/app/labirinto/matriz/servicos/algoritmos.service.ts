@@ -241,12 +241,12 @@ export class AlgoritmosService {
 
     let no: No = new No(self.explorador.getPosicaoAtual(), null, 1, null)
 
-    self.borda.push(no)
-
-    self.bfs_iter()
+    self.borda.push(no)    
+    let iteracoes = 0
+    self.bfs_iter(iteracoes)
   }
 
-  bfs_iter() {
+  bfs_iter(iteracoes: any) {
     if (self.borda.length == 0)
       return
 
@@ -258,6 +258,7 @@ export class AlgoritmosService {
 
     if (self.explorador.checarObjetivo()) {
       self.pintarSolucao(no)
+      console.log(iteracoes)
       return
     }
 
@@ -275,7 +276,7 @@ export class AlgoritmosService {
     if (!self.pausado) {
       setTimeout(() => {
         self.mudancaLabirintoAnnounceSource.next(self.labirinto)
-        self.bfs_iter()
+        self.bfs_iter(iteracoes+1)
       }, 10)
     }
   }
@@ -288,12 +289,13 @@ export class AlgoritmosService {
     let no: No = new No(self.explorador.getPosicaoAtual(), null, 1, null)
 
     self.borda.unshift(no)
+    let iteracoes = 0
 
-    self.dfs_iter()
+    self.dfs_iter(iteracoes)
 
   }
 
-  dfs_iter() {
+  dfs_iter(iteracoes: number) {
     if (self.borda.length == 0)
       return
 
@@ -304,6 +306,7 @@ export class AlgoritmosService {
     self.mudancaLabirintoAnnounceSource.next(self.labirinto)
 
     if (self.explorador.checarObjetivo()) {
+      console.log(iteracoes)
       self.pintarSolucao(no)
       return
     }
@@ -322,7 +325,7 @@ export class AlgoritmosService {
     if (!self.pausado) {
       setTimeout(() => {
         self.mudancaLabirintoAnnounceSource.next(self.labirinto)
-        self.dfs_iter()
+        self.dfs_iter(iteracoes+1)
       }, 10)
     }
   }
@@ -335,11 +338,12 @@ export class AlgoritmosService {
     let no: No = new No(self.explorador.getPosicaoAtual(), null, 1, null)
 
     self.borda.unshift(no)
+    let iteracoes = 0
 
-    self.ucs_iter()
+    self.ucs_iter(iteracoes)
   }
 
-  ucs_iter() {
+  ucs_iter(iteracoes: number) {
     if (self.borda.length == 0)
       return
 
@@ -352,6 +356,7 @@ export class AlgoritmosService {
 
     if (self.explorador.checarObjetivo()) {
       self.pintarSolucao(no)
+      console.log(iteracoes)
       return
     }
 
@@ -380,7 +385,7 @@ export class AlgoritmosService {
     if (!self.pausado) {
       setTimeout(() => {
         self.mudancaLabirintoAnnounceSource.next(self.labirinto)
-        self.ucs_iter()
+        self.ucs_iter(iteracoes+1)
       }, 10)
     }
 
@@ -394,11 +399,12 @@ export class AlgoritmosService {
     let no: No = new No(self.explorador.getPosicaoAtual(), null, 1, 0)
 
     self.borda.unshift(no)
+    let iteracoes = 0
 
-    self.aestrela_iter()
+    self.aestrela_iter(iteracoes)
   }
 
-  aestrela_iter() {
+  aestrela_iter(iteracoes: number) {
     if (self.borda.length == 0)
       return
 
@@ -411,6 +417,7 @@ export class AlgoritmosService {
 
     if (self.explorador.checarObjetivo()) {
       self.pintarSolucao(no)
+      console.log(iteracoes)
       return
     }
 
@@ -439,7 +446,7 @@ export class AlgoritmosService {
     if (!self.pausado) {
       setTimeout(() => {
         self.mudancaLabirintoAnnounceSource.next(self.labirinto)
-        self.aestrela_iter()
+        self.aestrela_iter(iteracoes+1)
       }, 10)
     }
   }
@@ -493,11 +500,16 @@ export class AlgoritmosService {
   pintarSolucao(no: No) {
     let noAtual = no
 
+    let quantidadeNos = 0
+
     while (noAtual) {
       noAtual.estado.mudarTipo(TipoCelula.solucao)
       self.mudancaLabirintoAnnounceSource.next(self.labirinto)
       noAtual = noAtual.pai
+      quantidadeNos = quantidadeNos + 1
     }
+
+    console.log("nós solucao: "+ quantidadeNos)
   }
 
 }
