@@ -454,12 +454,20 @@ export class AlgoritmosService {
   adicionarOrdenado(borda: Array<No>, no: No) {
     let pos = 0;
 
-    borda.forEach((item, i) => {
-      if (no.funcao > item.funcao)
-        pos = i;
-    })
-
-    borda.splice(pos + 1, 0, no)
+    if(self.algoritmoSelecionado === 'ucs'){
+      borda.forEach((item, i) => {
+        if (no.custo > item.custo)
+          pos = i;
+      })  
+      borda.splice(pos + 1, 0, no)
+    }
+    else{
+      borda.forEach((item, i) => {
+        if (no.funcao > item.funcao)
+          pos = i;
+      })  
+      borda.splice(pos + 1, 0, no)
+    }    
   }
 
   gerarCusto(no: No) {
